@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infaq MI Ma'arif Kuwaderan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-emerald-700 text-white shadow-lg no-print">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <img id="app-logo" src="https://via.placeholder.com/60?text=LOGO" alt="Logo Madrasah" class="w-12 h-12 object-contain bg-white rounded-full p-1 shadow">
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">INFAQ MI MA'ARIF KUWADERAN</h1>
+                    <p class="text-xs text-emerald-100">Sistem Transparansi Keuangan Infaq Madrasah</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMode()" id="btn-mode" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-3 py-1.5 rounded text-sm transition shadow">
+                    <i class="fas fa-eye"></i> Mode Publik (Read-Only)
+                </button>
+                <button onclick="window.print()" class="bg-white text-emerald-800 hover:bg-emerald-50 font-semibold px-3 py-1.5 rounded text-sm transition shadow">
+                    <i class="fas fa-print"></i> Cetak PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- Banner Header Khusus Cetak/Print -->
+        <div class="print-only mb-6 text-center border-b-2 border-slate-800 pb-4">
+            <h2 class="text-2xl font-bold uppercase">MI MA'ARIF KUWADERAN</h2>
+            <h3 class="text-lg font-semibold">LAPORAN REKAPITULASI INFAQ MADRASAH</h3>
+            <p class="text-xs text-slate-600">Dokumen Resmi Transparansi Keuangan Infaq</p>
+        </div>
+
+        <!-- Dashboard Ringkasan Saldo -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-lg shadow border-l-4 border-emerald-500">
+                <span class="text-xs text-slate-500 uppercase font-bold">Total Pemasukan</span>
+                <h3 id="txt-pemasukan" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow border-l-4 border-rose-500">
+                <span class="text-xs text-slate-500 uppercase font-bold">Total Pengeluaran</span>
+                <h3 id="txt-pengeluaran" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow border-l-4 border-amber-500">
+                <span class="text-xs text-slate-500 uppercase font-bold">Sisa Saldo Kas</span>
+                <h3 id="txt-saldo" class="text-2xl font-bold text-slate-800 mt-1">Rp 0</h3>
+            </div>
+        </div>
+
+        <!-- Pengaturan Identitas Pejabat (Khusus Pengurus) -->
+        <div id="section-officers" class="bg-white p-5 rounded-lg shadow mb-6 no-print">
+            <h3 class="text-md font-bold text-slate-700 mb-3 border-b pb-2">
+                <i class="fas fa-user-tie text-emerald-600"></i> Pengaturan Identitas & Tanda Tangan
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Kepala Madrasah</label>
+                    <input type="text" id="input-kepala" placeholder="Nama Kepala Madrasah" class="w-full border rounded p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Bendahara</label>
+                    <input type="text" id="input-bendahara" placeholder="Nama Bendahara" class="w-full border rounded p-2 text-sm">
+                </div>
+            </div>
+            <button onclick="saveOfficerNames()" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-1.5 rounded text-sm transition">
+                Simpan Identitas
+            </button>
+        </div>
+
+        <!-- Form Input Transaksi Baru (Khusus Pengurus) -->
+        <div id="section-form" class="bg-white p-5 rounded-lg shadow mb-6 no-print">
+            <h3 class="text-md font-bold text-slate-700 mb-3 border-b pb-2">
+                <i class="fas fa-plus-circle text-emerald-600"></i> Catat Transaksi Baru
+            </h3>
+            <form id="form-transaction" onsubmit="addTransaction(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <input type="date" id="tx-date" required class="border rounded p-2 text-sm">
+                <select id="tx-type" required class="border rounded p-2 text-sm">
+                    <option value="masuk">Pemasukan (Uang Masuk)</option>
+                    <option value="keluar">Pengeluaran (Uang Keluar)</option>
+                </select>
+                <input type="text" id="tx-category" placeholder="Kategori (misal: Infaq Jumat)" required class="border rounded p-2 text-sm">
+                <input type="text" id="tx-desc" placeholder="Keterangan Rinci" required class="border rounded p-2 text-sm">
+                <input type="number" id="tx-amount" placeholder="Nominal (Rp)" min="1" required class="border rounded p-2 text-sm">
+                <button type="submit" class="sm:col-span-2 lg:col-span-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded text-sm transition">
+                    Simpan Transaksi
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabel Transaksi -->
+        <div class="bg-white p-5 rounded-lg shadow">
+            <h3 class="text-md font-bold text-slate-700 mb-3 border-b pb-2">Riwayat Kas Infaq</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 border-b">
+                            <th class="p-2">Tanggal</th>
+                            <th class="p-2">Jenis</th>
+                            <th class="p-2">Kategori</th>
+                            <th class="p-2">Keterangan</th>
+                            <th class="p-2 text-right">Jumlah</th>
+                            <th class="p-2 text-center no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data transaksi dimasukkan lewat JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Area Tanda Tangan Khusus Dokumen Cetak/Print -->
+        <div class="print-only mt-12 grid grid-cols-2 text-center text-sm">
+            <div>
+                <p>Mengetahui,</p>
+                <p class="font-bold">Kepala MI Ma'arif Kuwaderan</p>
+                <div class="h-20"></div>
+                <p id="print-kepala" class="font-bold underline">(...................................)</p>
+            </div>
+            <div>
+                <p>Kuwaderan, <span id="print-date"></span></p>
+                <p class="font-bold">Bendahara Madrasah</p>
+                <div class="h-20"></div>
+                <p id="print-bendahara" class="font-bold underline">(...................................)</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('infaq_txs')) || [];
+        let isPublicMode = false;
+
+        function initApp() {
+            loadOfficerNames();
+            renderData();
+            document.getElementById('tx-date').valueAsDate = new Date();
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function saveOfficerNames() {
+            const kepala = document.getElementById('input-kepala').value;
+            const bendahara = document.getElementById('input-bendahara').value;
+            localStorage.setItem('officer_kepala', kepala);
+            localStorage.setItem('officer_bendahara', bendahara);
+            loadOfficerNames();
+            alert('Nama pejabat berhasil disimpan!');
+        }
+
+        function loadOfficerNames() {
+            const kepala = localStorage.getItem('officer_kepala') || '';
+            const bendahara = localStorage.getItem('officer_bendahara') || '';
+            document.getElementById('input-kepala').value = kepala;
+            document.getElementById('input-bendahara').value = bendahara;
+            document.getElementById('print-kepala').innerText = kepala || '(...................................)';
+            document.getElementById('print-bendahara').innerText = bendahara || '(...................................)';
+        }
+
+        function addTransaction(e) {
+            e.preventDefault();
+            const newTx = {
+                id: Date.now(),
+                date: document.getElementById('tx-date').value,
+                type: document.getElementById('tx-type').value,
+                category: document.getElementById('tx-category').value,
+                description: document.getElementById('tx-desc').value,
+                amount: parseFloat(document.getElementById('tx-amount').value)
+            };
+            transactions.push(newTx);
+            localStorage.setItem('infaq_txs', JSON.stringify(transactions));
+            document.getElementById('form-transaction').reset();
+            document.getElementById('tx-date').valueAsDate = new Date();
+            renderData();
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                localStorage.setItem('infaq_txs', JSON.stringify(transactions));
+                renderData();
+            }
+        }
+
+        function renderData() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            let totalMasuk = 0, totalKeluar = 0;
+
+            transactions.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
+                if (tx.type === 'masuk') totalMasuk += tx.amount;
+                else totalKeluar += tx.amount;
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="p-2">${tx.date}</td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded text-xs font-bold ${tx.type === 'masuk' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${tx.type.toUpperCase()}</span></td>
+                    <td class="p-2">${tx.category}</td>
+                    <td class="p-2">${tx.description}</td>
+                    <td class="p-2 text-right font-semibold ${tx.type === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}">Rp ${tx.amount.toLocaleString('id-ID')}</td>
+                    <td class="p-2 text-center no-print">
+                        ${!isPublicMode ? `<button onclick="deleteTransaction(${tx.id})" class="text-rose-500 hover:text-rose-700"><i class="fas fa-trash"></i></button>` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('txt-pemasukan').innerText = `Rp ${totalMasuk.toLocaleString('id-ID')}`;
+            document.getElementById('txt-pengeluaran').innerText = `Rp ${totalKeluar.toLocaleString('id-ID')}`;
+            document.getElementById('txt-saldo').innerText = `Rp ${(totalMasuk - totalKeluar).toLocaleString('id-ID')}`;
+        }
+
+        function toggleMode() {
+            isPublicMode = !isPublicMode;
+            document.getElementById('section-form').style.display = isPublicMode ? 'none' : 'block';
+            document.getElementById('section-officers').style.display = isPublicMode ? 'none' : 'block';
+            document.getElementById('btn-mode').innerHTML = isPublicMode 
+                ? '<i class="fas fa-user-shield"></i> Mode Pengurus' 
+                : '<i class="fas fa-eye"></i> Mode Publik (Read-Only)';
+            renderData();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
